@@ -35,7 +35,9 @@ export type TClassCreateInput = Omit<
   trainerId: string;
 };
 
-export type TClassUpdateInput = Partial<TClassCreateInput>;
+export type TClassUpdateInput = Partial<Omit<IClass, 'trainer'>> & {
+  trainerId?: string;
+};
 
 export type TClassQuery = {
   trainerId?: string;

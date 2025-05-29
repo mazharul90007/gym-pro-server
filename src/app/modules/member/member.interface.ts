@@ -1,10 +1,11 @@
-import { Model, Document } from 'mongoose';
+import { Model } from 'mongoose';
+export const USER_ROLE = {
+  ADMIN: 'admin',
+  TRAINER: 'trainer',
+  TRAINEE: 'trainee',
+} as const;
 
-export enum UserRole {
-  admin = 'admin',
-  trainer = 'trainer',
-  trainee = 'trainee',
-}
+export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
 export type IMember = {
   memberId: string;
@@ -32,12 +33,25 @@ export type IMember = {
   updatedAt?: Date;
 };
 
-export type IMemberModel = Model<IMember, {}, {}>;
+export type IMemberModel = Model<
+  IMember,
+  {},
+  {
+    isUserExist(email: string): Promise<IMember | null>;
+    isPasswordMatched(
+      givenPassword: string,
+      savedPassword: string,
+    ): Promise<boolean>;
+  }
+>;
+
 export type TMemberCreateInput = Omit<
   IMember,
   '_id' | 'createdAt' | 'updatedAt' | 'isDeleted' | 'lastLogin' | 'isActive'
 > & { password: string };
+
 export type TMemberUpdateInput = Partial<TMemberCreateInput>;
+
 export type TMemberQuery = {
   role?: UserRole;
   isActive?: string;

@@ -1,53 +1,48 @@
 import { ErrorRequestHandler } from 'express';
 import ApiError from '../errors/ApiError';
-import mongoose from 'mongoose';
+import httpStatus from 'http-status';
 import config from '../app/config';
 
-const globalErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Something went wrong!';
-  let errorDetails = err;
-  if (err instanceof mongoose.Error.ValidationError) {
-    statusCode = 400;
-    message = 'Validation Error';
-    const errors = Object.values(err.errors).map((el: any) => ({
-      field: el.path,
+const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
+  let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
+  let message = 'Something went wrong!';
+  let errorMessages: { path: string; message: string }[] = [];
+
+  if (error.name === 'ValidationError') {
+    statusCode = httpStatus.BAD_REQUEST;
+    message = 'Validation Error!';
+    errorMessages = Object.values(error.errors).map((el: any) => ({
+      path: el.path,
       message: el.message,
     }));
-    errorDetails = { issues: errors };
-  } else if (err instanceof mongoose.Error.CastError) {
-    statusCode = 400;
-    message = 'Invalid ID Provided';
-    errorDetails = {
-      path: err.path,
-      message: `Invalid ${err.path}: ${err.value} format.`,
-    };
-  } else if (err.code && err.code === 11000) {
-    statusCode = 409; // Conflict
-    message = 'Duplicate entry!';
-    const match = err.message.match(/"([^"]*)"/);
-    const extractedMessage = match && match[1];
-    errorDetails = {
-      message: `${extractedMessage || 'Duplicate key'} already exists.`,
-    };
-  } else if (err instanceof ApiError) {
-    statusCode = err.statusCode;
-    message = err.message;
-    errorDetails = err.message;
-  } else if (err instanceof Error) {
-    statusCode = 500;
-    message = err.message;
-    errorDetails = err.message;
+  } else if (error.name === 'CastError') {
+    statusCode = httpStatus.BAD_REQUEST;
+    message = 'Invalid ID';
+    errorMessages = [
+      { path: error.path, message: `Invalid ${error.path} ID provided.` },
+    ];
+  } else if (error.code === 11000 && error.keyValue) {
+    statusCode = httpStatus.CONFLICT;
+    message = 'Duplicate Entry';
+    const field = Object.keys(error.keyValue)[0];
+    const value = Object.values(error.keyValue)[0];
+    errorMessages = [
+      { path: field, message: `${field} '${value}' already exists.` },
+    ];
+  } else if (error instanceof ApiError) {
+    statusCode = error.statusCode;
+    message = error.message;
+    errorMessages = error.message ? [{ path: '', message: error.message }] : [];
+  } else if (error instanceof Error) {
+    message = error.message;
+    errorMessages = error.message ? [{ path: '', message: error.message }] : [];
   }
 
   res.status(statusCode).json({
     success: false,
     message,
-    errorDetails:
-      config.node_env === 'development'
-        ? errorDetails
-        : 'Internal Server Error',
-    stack: config.node_env === 'development' ? err?.stack : undefined,
+    errorMessages,
+    stack: config.node_env === 'development' ? error.stack : undefined,
   });
 };
 

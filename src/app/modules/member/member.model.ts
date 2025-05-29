@@ -1,5 +1,5 @@
-import { Schema, model } from 'mongoose';
-import { IMember, IMemberModel, UserRole } from './member.interface';
+import { Schema, model, Query } from 'mongoose';
+import { IMember, IMemberModel, USER_ROLE } from './member.interface';
 import config from '../../config';
 import bcrypt from 'bcrypt';
 
@@ -9,7 +9,7 @@ const MemberSchema = new Schema<IMember, IMemberModel>(
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
+    password: { type: String, required: true, select: 0 },
     phone: { type: String, required: true },
     addressStreet: { type: String, required: true },
     addressCity: { type: String, required: true },
@@ -28,8 +28,8 @@ const MemberSchema = new Schema<IMember, IMemberModel>(
     isActive: { type: Boolean, default: true },
     role: {
       type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.trainee,
+      enum: Object.values(USER_ROLE),
+      default: USER_ROLE.TRAINEE,
       required: true,
     },
     profilePicture: { type: String },
@@ -48,6 +48,8 @@ const MemberSchema = new Schema<IMember, IMemberModel>(
   },
 );
 
+// --- SCHEMA MIDDLEWARE (HOOKS) ---
+
 MemberSchema.pre('save', async function (next) {
   if (this.isModified('password')) {
     this.password = await bcrypt.hash(
@@ -58,20 +60,40 @@ MemberSchema.pre('save', async function (next) {
   next();
 });
 
-MemberSchema.pre('find', function (next) {
+MemberSchema.pre('find', function (this: Query<IMember[], IMember>, next) {
   this.find({ isDeleted: { $ne: true } });
   next();
 });
 
-MemberSchema.pre('findOne', function (next) {
-  this.findOne({ isDeleted: { $ne: true } });
-  next();
-});
+MemberSchema.pre(
+  'findOne',
+  function (this: Query<IMember | null, IMember>, next) {
+    this.findOne({ isDeleted: { $ne: true } });
+    next();
+  },
+);
 
-MemberSchema.pre('findOneAndUpdate', function (next) {
-  // 'this' refers to the query being executed
-  this.setQuery({ ...this.getQuery(), isDeleted: { $ne: true } });
-  next();
-});
+MemberSchema.pre(
+  'findOneAndUpdate',
+  function (this: Query<any, IMember>, next) {
+    this.setQuery({ ...this.getQuery(), isDeleted: { $ne: true } });
+    next();
+  },
+);
+
+// --- STATICS (Custom methods for the model) ---
+MemberSchema.statics.isUserExist = async function (
+  email: string,
+): Promise<IMember | null> {
+  return await this.findOne({ email }).select('+password');
+};
+
+// Static method to compare a given password with the hashed password
+MemberSchema.statics.isPasswordMatched = async function (
+  givenPassword: string,
+  savedPassword: string,
+): Promise<boolean> {
+  return await bcrypt.compare(givenPassword, savedPassword);
+};
 
 export const Member = model<IMember, IMemberModel>('Member', MemberSchema);
