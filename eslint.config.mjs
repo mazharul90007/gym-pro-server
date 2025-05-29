@@ -1,9 +1,9 @@
-import globals from "globals";
-import js from "@eslint/js";
-import tseslint from "@typescript-eslint/eslint-plugin";
-import tsParser from "@typescript-eslint/parser";
-import prettierConfig from "eslint-config-prettier";
-import prettierPlugin from "eslint-plugin-prettier";
+import globals from 'globals';
+import js from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import prettierConfig from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
 
 export default [
   // Base configurations
@@ -11,17 +11,17 @@ export default [
 
   // TypeScript configuration
   {
-    files: ["**/*.{js,mjs,cjs,ts}"],
+    files: ['**/*.{js,mjs,cjs,ts}'],
     languageOptions: {
       parser: tsParser,
       globals: {
         ...globals.node,
         ...globals.es2021,
-        process: "readonly",
+        process: 'readonly',
       },
     },
     plugins: {
-      "@typescript-eslint": tseslint,
+      '@typescript-eslint': tseslint,
     },
   },
 
@@ -33,16 +33,16 @@ export default [
     },
     rules: {
       ...prettierPlugin.configs.recommended.rules,
-      "prettier/prettier": "error",
-      "no-unused-expressions": "error",
-      "prefer-const": "error",
-      "no-console": "warn",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
+      'prettier/prettier': 'error',
+      'no-unused-expressions': 'error',
+      'prefer-const': 'error',
+      'no-console': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
     },
@@ -50,6 +50,6 @@ export default [
 
   // Ignore patterns
   {
-    ignores: ["node_modules", "dist"],
+    ignores: ['node_modules', 'dist'],
   },
 ];

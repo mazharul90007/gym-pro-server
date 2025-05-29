@@ -3,7 +3,7 @@ import ApiError from '../errors/ApiError';
 import httpStatus from 'http-status';
 import config from '../app/config';
 
-const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
+const globalErrorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
   let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
   let message = 'Something went wrong!';
   let errorMessages: { path: string; message: string }[] = [];

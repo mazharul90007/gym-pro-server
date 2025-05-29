@@ -1,4 +1,3 @@
-// src/modules/classes/class.service.ts
 import {
   TClassCreateInput,
   TClassUpdateInput,
@@ -11,8 +10,10 @@ import { startOfDay, endOfDay } from 'date-fns';
 import { Class } from './class.model';
 import { Types } from 'mongoose';
 import ApiError from '../../../errors/ApiError';
+import httpStatus from 'http-status';
 import { Member } from '../member/member.model';
 import config from '../../config';
+import { USER_ROLE } from '../member/member.interface';
 
 const createClassInDB = async (payload: TClassCreateInput): Promise<IClass> => {
   const { trainerId, ...classData } = payload;
@@ -22,39 +23,45 @@ const createClassInDB = async (payload: TClassCreateInput): Promise<IClass> => {
     isDeleted: false,
   });
   if (existingClass) {
-    throw new ApiError(400, 'Class with this ID already exists!');
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Class with this ID already exists!',
+    );
+  }
+
+  const classScheduledDate = new Date(payload.scheduledTime);
+  const startOfClassDay = startOfDay(classScheduledDate);
+  const endOfClassDay = endOfDay(classScheduledDate);
+
+  const classesCountOnScheduledDay = await Class.countDocuments({
+    scheduledTime: {
+      $gte: startOfClassDay,
+      $lte: endOfClassDay,
+    },
+    isDeleted: false,
+  });
+
+  if (classesCountOnScheduledDay >= config.admin_max_schedules_per_day) {
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      `Cannot schedule more than ${config.admin_max_schedules_per_day} classes on ${classScheduledDate.toDateString()}. Limit reached.`,
+    );
   }
 
   const trainer = await Member.findById(trainerId);
-  if (!trainer) {
-    throw new ApiError(404, 'Trainer not found!');
-  }
 
-  if (trainer.role === 'admin') {
-    const today = new Date();
-    const startOfToday = startOfDay(today);
-    const endOfToday = endOfDay(today);
-
-    const createdClassesToday = await Class.countDocuments({
-      trainer: trainerId,
-      scheduledTime: {
-        $gte: startOfToday,
-        $lte: endOfToday,
-      },
-      isDeleted: false,
-    });
-
-    if (createdClassesToday >= config.admin_max_schedules_per_day) {
-      throw new ApiError(
-        400,
-        `Admin cannot create more than ${config.admin_max_schedules_per_day} schedules per day.`,
-      );
-    }
+  if (!trainer || trainer.isDeleted || trainer.role !== USER_ROLE.TRAINER) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      'Trainer not found or is not a valid trainer role!',
+    );
   }
 
   const classToCreate = {
     ...classData,
-    trainer: new Types.ObjectId(trainerId), // This should now be fine
+    trainer: new Types.ObjectId(trainerId),
+    currentBookings: 0,
+    isAvailable: true,
   };
 
   const result = await Class.create(classToCreate);
@@ -75,13 +82,17 @@ const getAllClassesFromDB = async (query: TClassQuery): Promise<IClass[]> => {
   if (difficultyLevel) {
     filter.difficultyLevel = difficultyLevel;
   }
+
   if (isAvailable !== undefined) {
     filter.isAvailable = isAvailable === 'true';
   }
   if (date) {
     const queryDate = new Date(date);
     if (isNaN(queryDate.getTime())) {
-      throw new ApiError(400, 'Invalid date format for query. Use YYYY-MM-DD.');
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        'Invalid date format for query. Use YYYY-MM-DD.',
+      );
     }
     filter.scheduledTime = {
       $gte: startOfDay(queryDate),
@@ -119,27 +130,41 @@ const updateClassInDB = async (
 
   if (trainerId) {
     const trainerMember = await Member.findById(trainerId);
-    if (!trainerMember || trainerMember.role !== 'trainer') {
+    if (
+      !trainerMember ||
+      trainerMember.isDeleted ||
+      trainerMember.role !== USER_ROLE.TRAINER
+    ) {
       throw new ApiError(
-        400,
+        httpStatus.BAD_REQUEST,
         'Invalid new trainer ID or member is not a trainer.',
       );
     }
     updateFields.trainer = new Types.ObjectId(trainerId);
   }
 
-  if (payload.currentBookings !== undefined) {
+  if (
+    payload.currentBookings !== undefined ||
+    payload.maxCapacity !== undefined
+  ) {
     const existingClass = await Class.findById(id);
     if (!existingClass) {
-      throw new ApiError(404, 'Class not found!');
+      throw new ApiError(httpStatus.NOT_FOUND, 'Class not found!');
     }
-    const newCapacity =
+
+    const newMaxCapacity =
       payload.maxCapacity !== undefined
         ? payload.maxCapacity
         : existingClass.maxCapacity;
-    if (payload.currentBookings > newCapacity) {
+
+    const newCurrentBookings =
+      payload.currentBookings !== undefined
+        ? payload.currentBookings
+        : existingClass.currentBookings;
+
+    if (newCurrentBookings > newMaxCapacity) {
       throw new ApiError(
-        400,
+        httpStatus.BAD_REQUEST,
         'Cannot set current bookings greater than max capacity!',
       );
     }
@@ -147,7 +172,7 @@ const updateClassInDB = async (
 
   const result = await Class.findByIdAndUpdate(id, updateFields, { new: true });
   if (!result) {
-    throw new ApiError(404, 'Class not found for update!');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Class not found for update!');
   }
 
   const populatedResult = await Class.findById(result._id).populate('trainer');
@@ -157,13 +182,13 @@ const updateClassInDB = async (
 const deleteClassFromDB = async (id: string): Promise<IClass | null> => {
   const existingClass = await Class.findById(id);
   if (!existingClass) {
-    throw new ApiError(404, 'Class not found for deletion!');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Class not found for deletion!');
   }
 
   if (existingClass.currentBookings > 0) {
     throw new ApiError(
-      400,
-      'Cannot delete class with active bookings. Cancel all bookings first.',
+      httpStatus.BAD_REQUEST,
+      'Cannot delete class with active bookings. All bookings must be cancelled first.',
     );
   }
 
@@ -174,7 +199,7 @@ const deleteClassFromDB = async (id: string): Promise<IClass | null> => {
   );
 
   if (!result) {
-    throw new ApiError(404, 'Class not found for deletion!');
+    throw new ApiError(httpStatus.NOT_FOUND, 'Class not found for deletion!');
   }
 
   return result;

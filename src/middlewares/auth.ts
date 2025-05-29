@@ -33,7 +33,7 @@ const auth =
           token,
           config.jwt.secret as string,
         ) as TJWTDecodedPayload;
-      } catch (error) {
+      } catch (_error) {
         throw new ApiError(httpStatus.FORBIDDEN, 'Invalid or Expired Token!');
       }
 

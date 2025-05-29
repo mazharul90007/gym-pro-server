@@ -1,49 +1,50 @@
-// src/app.ts
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import globalErrorHandler from './middlewares/globalErrorHandler';
+import cookieParser from 'cookie-parser';
+import httpStatus from 'http-status';
+
 import { MemberRoutes } from './app/modules/member/member.route';
 import { ClassRoutes } from './app/modules/class/class.route';
+import { AuthRoutes } from './app/modules/auth/auth.route';
+import { BookingRoutes } from './app/modules/booking/booking.route';
+
+// Error Handleing middleware
+import globalErrorHandler from './middlewares/globalErrorHandler';
+import { catchAsync } from './utils/catchAsync';
 
 const app: Application = express();
 
-const catchAsync = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
-};
-
-// Middleware
+// Middlewares
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
-//Application Routes
+app.use('/api/v1/auth', AuthRoutes);
 app.use('/api/v1/members', MemberRoutes);
 app.use('/api/v1/classes', ClassRoutes);
+app.use('/api/v1/bookings', BookingRoutes);
 
-//Root Route
+// Root Route
 app.get(
   '/',
   catchAsync(async (req: Request, res: Response) => {
-    res.send(
-      'Gym Class Scheduling and Membership Management System API (No Auth)!',
-    );
+    res.status(httpStatus.OK).send('Gym-Pro');
   }),
 );
 
-//Global Error Handling Middleware
-app.use(globalErrorHandler);
-
-//Not Found Route
-app.use((req, res) => {
-  res.status(404).json({
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(httpStatus.NOT_FOUND).json({
     success: false,
     message: 'API Not Found!',
-    errorDetails: {
-      path: req.originalUrl,
-      message: 'Your requested API is not found!',
-    },
+    errorMessages: [
+      {
+        path: req.originalUrl,
+        message: 'Your requested API is not found!',
+      },
+    ],
   });
 });
+
+app.use(globalErrorHandler);
 
 export default app;
