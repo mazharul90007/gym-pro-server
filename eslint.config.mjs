@@ -45,6 +45,7 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+      'no-unused-vars': 'off',
     },
   },
 

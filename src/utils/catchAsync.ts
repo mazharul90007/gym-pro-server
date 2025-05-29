@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 
 type AsyncFunction = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
+  _req: Request,
+  _res: Response,
+  _next: NextFunction,
 ) => Promise<any>;
 
 export const catchAsync = (fn: AsyncFunction) => {
