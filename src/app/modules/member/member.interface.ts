@@ -1,4 +1,4 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 export const USER_ROLE = {
   ADMIN: 'admin',
@@ -9,6 +9,7 @@ export const USER_ROLE = {
 export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
 export type IMember = {
+  _id?: Types.ObjectId;
   memberId: string;
   firstName: string;
   lastName: string;
@@ -34,18 +35,13 @@ export type IMember = {
   updatedAt?: Date;
 };
 
-export interface IMemberModel
-  extends Model<
-    IMember,
-    {},
-    {
-      isUserExist(email: string): Promise<IMember | null>;
-      isPasswordMatched(
-        givenPassword: string,
-        savedPassword: string,
-      ): Promise<boolean>;
-    }
-  > {}
+export interface IMemberModel extends Model<IMember> {
+  isUserExist(email: string): Promise<IMember | null>;
+  isPasswordMatched(
+    givenPassword: string,
+    savedPassword: string,
+  ): Promise<boolean>;
+}
 
 export type TMemberCreateInput = Omit<
   IMember,

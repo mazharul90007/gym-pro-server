@@ -14,7 +14,6 @@ import httpStatus from 'http-status';
 import config from '../../config';
 import { Member } from '../member/member.model';
 
-// Existing loginUser function
 const loginUser = async (payload: TLoginPayload): Promise<TLoginResponse> => {
   const { email, password } = payload;
 
@@ -40,21 +39,29 @@ const loginUser = async (payload: TLoginPayload): Promise<TLoginResponse> => {
   }
 
   const jwtPayload: TJWTDecodedPayload = {
-    memberId: member._id.toString(), // member._id will be ObjectId, convert to string
+    memberId: member._id!.toString(),
     email: member.email,
     role: member.role,
   };
 
-  const accessToken = jwt.sign(jwtPayload, config.jwt.secret as string, {
-    expiresIn: config.jwt.access_token_expires_in,
-  });
+  const jwtSecret = config.jwt.secret as jwt.Secret;
+  const jwtRefreshSecret = config.jwt.refresh_secret as jwt.Secret;
+
+  const accessTokenOptions: jwt.SignOptions = {
+    expiresIn: config.jwt.access_token_expires_in as number,
+  };
+
+  const refreshTokenOptions: jwt.SignOptions = {
+    expiresIn: config.jwt.refresh_token_expires_in as number,
+  };
+
+  // Directly use the string durations from config
+  const accessToken = jwt.sign(jwtPayload, jwtSecret, accessTokenOptions);
 
   const refreshToken = jwt.sign(
     jwtPayload,
-    config.jwt.refresh_secret as string,
-    {
-      expiresIn: config.jwt.refresh_token_expires_in,
-    },
+    jwtRefreshSecret,
+    refreshTokenOptions,
   );
 
   return {
