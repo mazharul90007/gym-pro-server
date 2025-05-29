@@ -182,6 +182,41 @@ export type IMember = {
 };
 ```
 
+### `IClass`
+
+```typescript
+export type IClass = {
+  classId: string;
+  name: string;
+  description?: string;
+  trainer: Types.ObjectId | IMember;
+  durationMinutes: number;
+  maxCapacity: number;
+  currentBookings: number;
+  scheduledTime: Date;
+  location: string;
+  difficultyLevel: DifficultyLevel;
+  isAvailable: boolean;
+  isDeleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+```
+
+### `IBooking`
+
+```typescript
+export type IBooking = {
+  member: Types.ObjectId | IMember;
+  class: Types.ObjectId | IClass;
+  bookingDate: Date;
+  status: BookingStatus;
+  isDeleted: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+```
+
 ## Admin Credentials for Testing:
 
 - **Admin email:** admin@gmail.com
