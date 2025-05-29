@@ -1,4 +1,5 @@
 import { Model } from 'mongoose';
+
 export const USER_ROLE = {
   ADMIN: 'admin',
   TRAINER: 'trainer',
@@ -33,17 +34,18 @@ export type IMember = {
   updatedAt?: Date;
 };
 
-export type IMemberModel = Model<
-  IMember,
-  {},
-  {
-    isUserExist(email: string): Promise<IMember | null>;
-    isPasswordMatched(
-      givenPassword: string,
-      savedPassword: string,
-    ): Promise<boolean>;
-  }
->;
+export interface IMemberModel
+  extends Model<
+    IMember,
+    {},
+    {
+      isUserExist(email: string): Promise<IMember | null>;
+      isPasswordMatched(
+        givenPassword: string,
+        savedPassword: string,
+      ): Promise<boolean>;
+    }
+  > {}
 
 export type TMemberCreateInput = Omit<
   IMember,

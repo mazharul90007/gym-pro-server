@@ -1,14 +1,20 @@
-import { Member } from '../member/member.model';
 import {
   TLoginPayload,
   TLoginResponse,
   TJWTDecodedPayload,
 } from './auth.interface';
+import {
+  TMemberCreateInput,
+  IMember,
+  USER_ROLE,
+} from '../member/member.interface';
 import ApiError from '../../../errors/ApiError';
 import jwt from 'jsonwebtoken';
 import httpStatus from 'http-status';
 import config from '../../config';
+import { Member } from '../member/member.model';
 
+// Existing loginUser function
 const loginUser = async (payload: TLoginPayload): Promise<TLoginResponse> => {
   const { email, password } = payload;
 
@@ -34,7 +40,7 @@ const loginUser = async (payload: TLoginPayload): Promise<TLoginResponse> => {
   }
 
   const jwtPayload: TJWTDecodedPayload = {
-    memberId: member._id.toString(),
+    memberId: member._id.toString(), // member._id will be ObjectId, convert to string
     email: member.email,
     role: member.role,
   };
@@ -57,6 +63,26 @@ const loginUser = async (payload: TLoginPayload): Promise<TLoginResponse> => {
   };
 };
 
+const createUser = async (
+  payload: TMemberCreateInput,
+): Promise<Partial<IMember>> => {
+  const roleToUse = payload.role || USER_ROLE.TRAINEE;
+  const userDataWithDefinedRole = { ...payload, role: roleToUse };
+  const existingMember = await Member.isUserExist(payload.email);
+  if (existingMember && !existingMember.isDeleted) {
+    throw new ApiError(
+      httpStatus.CONFLICT,
+      'User with this email already exists!',
+    );
+  }
+
+  const newMember = await Member.create(userDataWithDefinedRole);
+  const { password, ...result } = newMember.toObject();
+
+  return result;
+};
+
 export const AuthService = {
   loginUser,
+  createUser,
 };
