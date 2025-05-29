@@ -3,7 +3,7 @@ import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import globalErrorHandler from './middlewares/globalErrorHandler';
 import { MemberRoutes } from './app/modules/member/member.route';
-// import { ClassRoutes } from './app/modules/class/class.route';
+import { ClassRoutes } from './app/modules/class/class.route';
 
 const app: Application = express();
 
@@ -19,7 +19,7 @@ app.use(cors());
 
 //Application Routes
 app.use('/api/v1/members', MemberRoutes);
-// app.use('/api/v1/classes', ClassRoutes);
+app.use('/api/v1/classes', ClassRoutes);
 
 //Root Route
 app.get(
@@ -35,7 +35,7 @@ app.get(
 app.use(globalErrorHandler);
 
 //Not Found Route
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'API Not Found!',
