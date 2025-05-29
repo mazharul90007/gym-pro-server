@@ -1,4 +1,5 @@
-# Gym Class Scheduling and Membership Management System
+# [Gym Pro](https://gym-pro-dun.vercel.app/)
+### a Gym Class Scheduling and Membership Management System
 
 ## Project Overview
 
@@ -179,3 +180,33 @@ export type IMember = {
   updatedAt?: Date;
 };
 ```
+## Admin Credentials for Testing:
+- **Admin email:** admin@gmail.com
+- **Admin password:** StrongPassword123!
+
+- **Trainer email:** trainer.pro@gmail.com
+- **Admin password:** SecureTrainerPass!
+
+## Instructions to Run Locally:
+- **Clone the Repository** git clone https://github.com/mazharul90007/gym-pro-server.git
+- **Go to the folder:** cd gym-pro
+- **Install Dependencies:** npm install
+- **Set up Environment Variable:** create a .env file in the root directory of the project.
+```
+NODE_ENV=development
+PORT=3000
+DB_URI=mongodb+srv://*******:*******@cluster0.*******/gym-pro?retryWrites=true&w=majority&appName=***** (your mongodb database uri)
+BCRYPT_SALT_ROUNDS=12
+ADMIN_MAX_SCHEDULES_PER_DAY=5
+
+JWT_SECRET= create a secret token
+JWT_REFRESH_SECRET= create a random secret token
+JWT_ACCESS_TOKEN_EXPIRES_IN=432000
+JWT_REFRESH_TOKEN_EXPIRES_IN=864000
+```
+- **Build the Project:** npm run build
+- **Start the Server:** npm run start:dev
+
+- ## Live Hosting Link:
+### [Gym Pro](https://gym-pro-dun.vercel.app/)
+- https://gym-pro-dun.vercel.app/
