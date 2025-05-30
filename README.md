@@ -40,6 +40,9 @@ The API is versioned at `/api/v1`. All requests use JSON.
 - `POST /api/v1/auth/login`
   - **Description:** Authenticates a user and provides access and refresh tokens.
   - **Access:** Public
+- `POST /api/v1/auth/signup`
+  - **Description:** Registers a new member (Admin, Trainer, or Trainee). This is the primary endpoint for new user creation.
+  - **Access:** Public (typically, for initial setup and admin, trainer, trainee signups), or specific roles if defined in your controller.
 
 ### Member Management (`/api/v1/members`)
 
