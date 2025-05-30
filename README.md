@@ -37,118 +37,62 @@ The API is versioned at `/api/v1`. All requests use JSON.
 
 ### Authentication (`/api/v1/auth`)
 
-- **`POST /api/v1/auth/login`**
+- `POST /api/v1/auth/login`
   - **Description:** Authenticates a user and provides access and refresh tokens.
   - **Access:** Public
-  - **Request Body:** `TLoginPayload`
-    ```json
-    {
-      "email": "string",
-      "password": "string"
-    }
-    ```
-  - **Response:** `TLoginResponse`
-    ```json
-    {
-      "success": true,
-      "statusCode": 200,
-      "message": "User logged in successfully",
-      "data": {
-        "accessToken": "string",
-        "refreshToken": "string"
-      }
-    }
-    ```
 
 ### Member Management (`/api/v1/members`)
 
-- **`POST /api/v1/members`**
+- `POST /api/v1/members`
   - **Description:** Creates a new member (Admin, Trainer, or Trainee).
   - **Access:** Admin (after initial setup) or Public (for initial trainee signup)
-  - **Request Body:** `TMemberCreateInput` (see schema below)
-  - **Response:** `Partial<IMember>`
-    ```json
-    {
-      "success": true,
-      "statusCode": 201,
-      "message": "Member created successfully",
-      "data": {
-        // ... partial IMember data (e.g., memberId, email, role)
-      }
-    }
-    ```
-- **`GET /api/v1/members`**
+- `GET /api/v1/members`
   - **Description:** Retrieves a list of all members.
   - **Access:** Admin
-  - **Query Parameters:** `role` (e.g., `?role=trainer`), `isActive` (e.g., `?isActive=true`), `search` (full-text search)
-  - **Response:** Array of `IMember`
-- **`GET /api/v1/members/:id`**
+- `GET /api/v1/members/:id`
   - **Description:** Retrieves a single member by ID.
   - **Access:** Admin
-  - **Response:** `IMember`
-- **`PATCH /api/v1/members/:id`**
+- `PATCH /api/v1/members/:id`
   - **Description:** Updates an existing member's information.
   - **Access:** Admin
-  - **Request Body:** `TMemberUpdateInput` (partial `IMember`)
-  - **Response:** Updated `IMember`
-- **`DELETE /api/v1/members/:id`**
+- `DELETE /api/v1/members/:id`
   - **Description:** Soft deletes a member (sets `isDeleted` to true).
   - **Access:** Admin
-  - **Response:** Deleted `IMember`
 
-### Class Scheduling (`/api/v1/class-schedules`)
+### Class Management (`/api/v1/classes`)
 
-- **`POST /api/v1/class-schedules`**
+- `POST /api/v1/classes/create-class`
   - **Description:** Creates a new class schedule and assigns a trainer.
   - **Access:** Admin
   - **Business Rules:** Max 5 schedules per day, each 2 hours long.
-  - **Request Body:**
-    ```json
-    {
-      "title": "Morning Yoga",
-      "trainerId": "ObjectId of a trainer member",
-      "date": "2025-06-01T00:00:00.000Z",
-      "startTime": "08:00",
-      "endTime": "10:00"
-    }
-    ```
-  - **Response:** Created `IClassSchedule` object.
-- **`GET /api/v1/class-schedules`**
+- `GET /api/v1/classes`
   - **Description:** Retrieves all class schedules. Trainers can view their assigned schedules.
   - **Access:** Admin, Trainer (filtered)
-- **`GET /api/v1/class-schedules/:id`**
+- `GET /api/v1/classes/:id`
   - **Description:** Retrieves a single class schedule by ID.
   - **Access:** Admin, Trainer
-- **`PATCH /api/v1/class-schedules/:id`**
+- `PATCH /api/v1/classes/:id`
   - **Description:** Updates a class schedule.
   - **Access:** Admin
-- **`DELETE /api/v1/class-schedules/:id`**
+- `DELETE /api/v1/classes/:id`
   - **Description:** Deletes a class schedule.
   - **Access:** Admin
 
 ### Booking Management (`/api/v1/bookings`)
 
-- **`POST /api/v1/bookings`**
+- `POST /api/v1/bookings`
   - **Description:** Trainee books a class schedule.
   - **Access:** Trainee
   - **Business Rules:** Max 10 trainees per schedule. Trainee cannot book multiple classes in the same time slot.
-  - **Request Body:**
-    ```json
-    {
-      "scheduleId": "ObjectId of a class schedule"
-    }
-    ```
-  - **Response:** Created `IBooking` object.
-- **`GET /api/v1/bookings`**
-  - **Description:** Trainees can view their own bookings. Admins can view all bookings.
-  - **Access:** Admin, Trainee
-- **`GET /api/v1/bookings/:id`**
-  - **Description:** Retrieves a single booking by ID.
-  - **Access:** Admin, Trainee (if their own booking)
-- **`DELETE /api/v1/bookings/:id`**
+- `PATCH /api/v1/bookings/:id/cancel`
   - **Description:** Trainee cancels their booking.
   - **Access:** Trainee
-
+- `GET /api/v1/bookings`
+  - **Description:** Trainees can view their own bookings. Admins can view all bookings.
+  - **Access:** Admin, Trainee
+- `GET /api/v1/bookings/my-bookings`
+  - **Description:** Trainees can view their own bookings.
+  - **Access:** Trainee
 ---
 
 ## Database Schema (Model Definitions)
