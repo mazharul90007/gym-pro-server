@@ -1,12 +1,18 @@
 # [Gym Pro](https://gym-pro-dun.vercel.app/)
 
+
 ### a Gym Class Scheduling and Membership Management System
 
 ## Project Overview
 
 The Gym Class Scheduling and Membership Management System is a robust backend solution designed to streamline gym operations. It effectively manages user roles (Admin, Trainer, Trainee), class scheduling, and membership bookings. The system enforces specific business rules to ensure efficient management, including daily class limits, trainee capacity per class, and robust authentication and authorization controls.
+- **Admin:** Admins manage creating and managing trainers, scheduling classes, and assigning trainers to these schedules
+- **Trainer:** Trainers conduct the classes and can view their assigned class schedules but cannot create new schedules or manage trainee profiles.
+- **Trainee:** Trainees maintain their own profiles, class bookings are subject to availability and the system-enforced limit of 10 trainees per schedule.
 
 ---
+
+**[Click Here to View the Live Server](https://gym-pro-dun.vercel.app/)**
 
 ## Technology Stack
 
@@ -21,11 +27,7 @@ The Gym Class Scheduling and Membership Management System is a robust backend so
 
 ## Relational Diagram
 
-Here's the conceptual relational diagram for the backend. This diagram illustrates how the `MEMBER`, `CLASS_SCHEDULE`, and `BOOKING` models relate to each other in the MongoDB database.
-
-**[Link to your Hosted Relational Diagram Image (e.g., on Imgur, GitHub Gist, or cloud storage)]**
-
-_(Replace the placeholder above with a direct link to an image of your diagram. You can generate this diagram using tools that support Mermaid.js, save it as an image, and then host it.)_
+![ER Diagram](https://i.ibb.co/3YRqBYvc/Gym-Pro.jpg)
 
 ---
 
